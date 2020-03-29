@@ -1,0 +1,44 @@
+{
+  "name": "covid-19-graphs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@nivo/line": "^0.61.1",
+    "@welcome-ui/button": "^1.18.1",
+    "@welcome-ui/connected-field": "^1.18.1",
+    "@welcome-ui/core": "^1.17.0",
+    "@welcome-ui/select": "^1.18.1",
+    "@xstyled/styled-components": "^1.17.0",
+    "@xstyled/system": "^1.17.0",
+    "final-form": "^4.18.7",
+    "next": "^9.3.2",
+    "normalizr": "^3.6.0",
+    "prop-types": "^15.7.2",
+    "ramda": "^0.27.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-final-form": "^6.3.5",
+    "styled-components": "^5.0.1",
+    "swr": "^0.1.18"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "bracketSpacing": false,
+    "semi": false,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "all"
+  },
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "devDependencies": {
+    "csv-loader": "^3.0.2",
+    "papaparse": "^5.1.1",
+    "prettier": "^2.0.2",
+    "typescript": "^3.8.3"
+  }
+}
