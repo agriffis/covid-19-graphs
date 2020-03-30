@@ -1,5 +1,5 @@
 dev:
-	yarn dev
+	yarn && yarn dev
 
 now:
-	now
+	now --prod
