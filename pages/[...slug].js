@@ -37,7 +37,7 @@ const Page = () => {
     const os = (counties?.[state] || []).map(toOption)
     os.unshift({value: 'all', label: 'All counties'})
     return os
-  }, [counties])
+  }, [counties, state])
 
   const [graphData, setGraphData] = React.useState([])
 
@@ -47,26 +47,53 @@ const Page = () => {
     }
   }, [data])
 
-  const cases = {
-    id: 'cases',
-    data: graphData.map(row => ({
-      x: row.date,
-      y: row.cases,
-    })),
-  }
+  const cases = React.useMemo(
+    () => ({
+      id: 'cases',
+      data: graphData.map(row => ({
+        x: row.date,
+        y: row.cases,
+      })),
+    }),
+    [graphData],
+  )
 
-  const deaths = {
-    id: 'deaths',
-    data: graphData.map(row => ({
-      x: row.date,
-      y: row.deaths,
-    })),
-  }
+  const deaths = React.useMemo(
+    () => ({
+      id: 'deaths',
+      data: graphData.map(row => ({
+        x: row.date,
+        y: row.deaths,
+      })),
+    }),
+    [graphData],
+  )
 
-  const initialValues = {
-    state: state || 'all',
-    county: county || 'all',
-  }
+  const initialValues = React.useMemo(
+    () => ({
+      state: state || 'all',
+      county: county || 'all',
+    }),
+    [state, county],
+  )
+
+  const onChange = React.useCallback(
+    ({values}) => {
+      if (!R.equals(values, initialValues)) {
+        if (values.state === 'all') {
+          Router.push('/')
+        } else {
+          Router.push(
+            '/[...slug]',
+            values.state !== initialValues.state || values.county === 'all'
+              ? `/${values.state}`
+              : `/${values.state}/${values.county}`,
+          )
+        }
+      }
+    },
+    [initialValues],
+  )
 
   return (
     <Layout>
@@ -75,19 +102,7 @@ const Page = () => {
         onSubmit={() => false}
         render={({handleSubmit}) => (
           <>
-            <Final.FormSpy
-              onChange={({values}) => {
-                if (!R.equals(values, initialValues)) {
-                  Router.push(
-                    '/[...slug]',
-                    values.state !== initialValues.state ||
-                      values.county === 'all'
-                      ? `/${values.state}`
-                      : `/${values.state}/${values.county}`,
-                  )
-                }
-              }}
-            />
+            <Final.FormSpy onChange={onChange} />
             <form onSubmit={handleSubmit}>
               <Box row ml={-10}>
                 <Box col={{xs: 1, sm: true}} pl={10} py={5}>
