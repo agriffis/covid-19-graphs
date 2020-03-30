@@ -1,5 +1,11 @@
-dev:
-	yarn && yarn dev
+.PHONY: build dev
+build dev:
+	yarn && yarn $@
 
-now:
+.PHONY: staging
+staging:
+	now
+
+.PHONY: prod
+prod:
 	now --prod

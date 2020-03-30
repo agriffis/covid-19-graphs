@@ -11,9 +11,11 @@
     "@welcome-ui/select": "^1.18.1",
     "@xstyled/styled-components": "^1.17.0",
     "@xstyled/system": "^1.17.0",
+    "csv-loader": "^3.0.2",
     "final-form": "^4.18.7",
-    "next": "^9.3.2",
-    "normalizr": "^3.6.0",
+    "isomorphic-unfetch": "^3.0.0",
+    "next": "^9.3.3",
+    "papaparse": "^5.1.1",
     "prop-types": "^15.7.2",
     "ramda": "^0.27.0",
     "react": "^16.13.1",
@@ -36,8 +38,6 @@
     "start": "next start"
   },
   "devDependencies": {
-    "csv-loader": "^3.0.2",
-    "papaparse": "^5.1.1",
     "prettier": "^2.0.2",
     "typescript": "^3.8.3"
   }

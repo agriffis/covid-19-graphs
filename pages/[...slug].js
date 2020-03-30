@@ -1,4 +1,3 @@
-import dynamic from 'next/dynamic'
 import Router from 'next/router'
 import {useRouter} from 'next/router'
 import {ResponsiveLine} from '@nivo/line'
@@ -9,25 +8,12 @@ import {ConnectedField} from '@welcome-ui/connected-field'
 import {Select} from '@welcome-ui/select'
 import {Box} from '@xstyled/styled-components'
 import Layout from '../components/Layout'
-
-let fetcher
-try {
-  fetcher = url => fetch(url).then(r => r.json())
-} catch (e) {
-  // SSR
-}
+import * as libData from '../lib/data'
+import {isBrowser} from '../lib/ssr'
 
 const toOption = s => ({value: s, label: s})
 
-const Page = () => {
-  const {
-    query: {slug = [], slug: [state, county] = []},
-  } = useRouter()
-
-  const {data: states} = useSWR(`/api/states`, fetcher)
-  const {data: counties} = useSWR(`/api/counties`, fetcher)
-  const {data} = useSWR(`/api/data${slug.map(s => `/${s}`).join('')}`, fetcher)
-
+const StateCountyForm = ({counties, initialValues, handleChange, states}) => {
   const stateOptions = React.useMemo(() => {
     const os = (states || []).map(toOption)
     os.unshift({value: 'all', label: 'All states'})
@@ -35,69 +21,31 @@ const Page = () => {
   }, [states])
 
   const countyOptions = React.useMemo(() => {
-    const os = (counties?.[state] || []).map(toOption)
+    const os = (counties?.[initialValues.state] || []).map(toOption)
     os.unshift({value: 'all', label: 'All counties'})
     return os
-  }, [counties, state])
-
-  const [graphData, setGraphData] = React.useState([])
-
-  React.useEffect(() => {
-    if (data) {
-      setGraphData(data)
-    }
-  }, [data])
-
-  const cases = React.useMemo(
-    () => ({
-      id: 'cases',
-      data: graphData.map(row => ({
-        x: row.date,
-        y: row.cases,
-      })),
-    }),
-    [graphData],
-  )
-
-  const deaths = React.useMemo(
-    () => ({
-      id: 'deaths',
-      data: graphData.map(row => ({
-        x: row.date,
-        y: row.deaths,
-      })),
-    }),
-    [graphData],
-  )
-
-  const initialValues = React.useMemo(
-    () => ({
-      state: state || 'all',
-      county: county || 'all',
-    }),
-    [state, county],
-  )
+  }, [counties, initialValues.state])
 
   const onChange = React.useCallback(
-    ({values}) => {
+    ({values, values: {state, county}, ...props}) => {
       if (!R.equals(values, initialValues)) {
-        if (values.state === 'all') {
-          Router.push('/')
-        } else {
-          Router.push(
-            '/[...slug]',
-            values.state !== initialValues.state || values.county === 'all'
-              ? `/${values.state}`
-              : `/${values.state}/${values.county}`,
-          )
+        if (state !== initialValues.state) {
+          county = 'all'
         }
+        handleChange({
+          ...props,
+          values: {
+            ...values,
+            county,
+          },
+        })
       }
     },
     [initialValues],
   )
 
   return (
-    <Layout>
+    isBrowser && (
       <Final.Form
         initialValues={initialValues}
         onSubmit={() => false}
@@ -128,6 +76,68 @@ const Page = () => {
             </form>
           </>
         )}
+      />
+    )
+  )
+}
+
+const Page = ({initialData}) => {
+  const {
+    query: {slug = [], slug: [state = 'all', county = 'all'] = []},
+  } = useRouter()
+
+  const {data: states} = useSWR(`/api/states`, {
+    initialData: initialData?.states,
+  })
+  const {data: counties} = useSWR(`/api/counties`, {
+    initialData: initialData?.counties,
+  })
+  const {data} = useSWR(`/api/data${slug.map(s => `/${s}`).join('')}`, {
+    initialData: initialData?.data,
+  })
+
+  const [graphData, setGraphData] = React.useState([])
+  React.useEffect(() => {
+    if (data) {
+      setGraphData(data)
+    }
+  }, [data])
+
+  const useGraphData = id =>
+    React.useMemo(
+      () => ({
+        id,
+        data: graphData.map(row => ({
+          x: row.date,
+          y: row[id],
+        })),
+      }),
+      [graphData],
+    )
+
+  const cases = useGraphData('cases')
+  const deaths = useGraphData('deaths')
+
+  const handleChange = ({values}) => {
+    if (values.state === 'all') {
+      Router.push('/')
+    } else {
+      Router.push(
+        '/[...slug]',
+        values.county === 'all'
+          ? `/${values.state}`
+          : `/${values.state}/${values.county}`,
+      )
+    }
+  }
+
+  return (
+    <Layout>
+      <StateCountyForm
+        counties={counties}
+        states={states}
+        initialValues={{county, state}}
+        handleChange={handleChange}
       />
       <div
         style={{
@@ -179,5 +189,21 @@ const Page = () => {
   )
 }
 
-// SSR isn't working yet
-export default dynamic(Promise.resolve(Page), {ssr: false})
+export const getServerSideProps = async context => {
+  const {params} = context
+
+  // Index.js reuses this view, and params will be undefined there.
+  const slug = params?.slug || []
+
+  return {
+    props: {
+      initialData: {
+        counties: libData.counties,
+        states: libData.states,
+        data: libData.getData(slug),
+      },
+    },
+  }
+}
+
+export default Page
