@@ -1,3 +1,4 @@
+import dynamic from 'next/dynamic'
 import Router from 'next/router'
 import {useRouter} from 'next/router'
 import {ResponsiveLine} from '@nivo/line'
@@ -178,4 +179,5 @@ const Page = () => {
   )
 }
 
-export default Page
+// SSR isn't working yet
+export default dynamic(Promise.resolve(Page), {ssr: false})
